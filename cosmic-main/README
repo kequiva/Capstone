@@ -1,0 +1,327 @@
+libcosmo and cosmic
+===================
+
+The library implements a C++ class that defines the basic cosmological
+parameters H_o, Omega_m, and Omega_Lambda. Omega_k is defined such
+that the Omegas satisfy the Friedmann Equation, that is, the sum of
+the density parameters for matter, Lambda, and curvature is equal to 1.
+An instantiation of the class also has a redshift, from which the standard
+distance measures are calculated.  An angular scale (kpc/arcsec) is
+also calculated.
+
+The accompanying program ("cosmic") provides an example use of this
+class, although "cosmic" is also useful on its own.  It prompts the
+user for H_o, Omega_m, and Omega_Lambda.  It then asks for a redshift
+and prints the resulting calculations to the screen, then repeats until
+stopped.  Cosmic also has a batch mode useful for calculating distances
+and angular scales for a large number of redshifts.  It takes a file as
+input with one redshift per line and outputs the results to cosmic.out
+or to a user specified file.  A complete list of command line options
+for cosmic is included in this README file.
+
+Installation
+============
+
+A Makefile is included with the distribution. The following options are
+available in the Makefile:
+
+	make libcosmo  - compile the library only
+	make cosmic    - compile the "cosmic" program only
+	make all       - compile both the library and "cosmic"
+	make clean     - remove intermediate files
+	make distclean - remove all compiled files
+
+Class Library Interface
+=======================
+
+The public interface of the class Cosmo is as follows:
+
+Cosmo()
+	default constructor.  H_o = 67.04, O_m = 0.3183, O_L = 0.6817
+
+Cosmo(const double h, const double om, const double ol)
+	constructor that allows the cosmological parameters to be set explicitly
+
+Cosmo(cont Cosmo& c)
+	copy constructor
+
+overloaded operators
+--------------------
+Cosmo& operator=(const Cosmo& c)
+	assignment operator
+
+member functions
+----------------
+double
+z()
+	returns the redshift
+
+double
+dL()
+	returns the luminosity distance
+
+double
+dA()
+	returns the angular diameter distance
+
+double
+dC()
+	returns the line-of-sight comoving distance
+
+double
+dM()
+	returns the transverse comoving distance
+
+double
+VC()
+	returns the comoving volume out to the redshift of the object
+
+double
+scale()
+	returns the number of kpc per arcsec at the redshift of the object
+
+double
+rhoCrit()
+	returns the critical density at the redshift of the object
+
+double
+lookback()
+	returns the lookback time to the redshift of the object
+
+double
+age()
+	returns the age of the universe at z=0 in the given cosmology
+
+void
+printLong()
+	prints all of the above plus the cosmological parameters, formatted
+
+void
+printShort(ostream& os = cout)
+	prints distances and scales on a single line to the specified stream.
+	stream defaults to cout.
+
+void
+printShortHeader(ostream& os = cout)
+	prints a header for use with printShort() to the specified stream.
+	stream defaults to cout.
+
+void
+printParams(ostream& os = cout, const char* leader = "")
+	prints the current cosmological parameters to the specified stream with
+	the text in "leader" at the beginning of the line.
+	stream defaults to cout.
+
+void
+setCosmology(const double h, const double om, const double ol)
+	sets the cosmological parameters. sets the derived quantities as
+	well if the object's redshift has already been set.
+
+void
+setRedshift(const double z)
+	sets the redshift of the object and the derived quantities
+
+void
+getCosmologyFromUser()
+	prompt the user for the cosmological parameters
+
+non-member functions
+--------------------
+double
+promptForParam(const char* description, const DP defaultVal)
+	generic function to get a number from the user, using a
+	default value if the user does not provide a response.
+
+Example
+-------
+
+#include "cosmo.h"
+
+int main(int argc, char** argv)
+{
+   Cosmo *c = new Cosmo(70, 1.0, 0.0);  // Einstein - de Sitter universe
+   double z = 0.1;
+
+   // print distances from z=0.1 to 1 in steps of 0.1
+   while (z <= 1.0) {
+      c->setRedshift(z);  // set z
+      c->printLong();  // print the derived quantities
+      z += 0.1;
+   }
+   return 0;
+}
+
+User interface to cosmic
+========================
+
+Cosmic supports a number of command line options, invoked as option=value:
+
+option  type     default    description
+----------------------------------------------------------------------------
+h       float    67.04      Value of the Hubble constant
+
+m       float    0.3183     Value of Omega matter
+
+l       float    0.6817     Value of Omega Lambda
+
+z       float    --         Single redshift for quick mode; calculates
+                            values for the given redshift, prints the
+                            results, then exits.
+
+batch   string   --         Input file of redshifts for batch mode
+                            processing; one redshift per line
+
+outfile string   cosmic.out Output file for batch mode results
+
+prompt  boolean  yes        Prompt the user for the cosmological
+                            parameters
+
+quiet   boolean  no         Suppress the copyright message
+
+html    boolean  no         Format the output using HTML
+
+help    boolean  no         Print a help message
+
+version boolean  no         Print the version number of cosmic
+
+Each of the boolean options may be turned on by prepending a "-" to the
+option name. Similarly, they may be turned off by prepending "-no" to
+the option name.  For example, "-help" is equivalent to "help=yes" and
+"-noprompt" is equivalent to "prompt=no".
+
+History
+=======
+
+Cosmic:
+05 Feb 2003  1.0    Initial version
+10 Feb 2003  1.01   Improved handling of non-numeric redshifts
+03 Mar 2003  1.02   Added batch mode to print a list of distances given
+                    an input file with a list of redshifts.  Added help
+                    message and improved handling of command-line
+                    arguments.
+06 Mar 2003  1.03   Improved handling of user input
+10 Jul 2003  1.04   Added additional command line options:
+                    * Set individual cosmological parameters on command line
+                    * Set output file name for batch mode
+                    * Suppress prompting for cosmological parameters
+15 Jul 2003  2.0    Adapted to work with libcosmo version 2.0
+15 Apr 2004  2.0.1  Improved handling of improper user input
+15 Mar 2005  2.0.2  Cleaned up to compile under g++ with fewer warnings
+31 Mar 2006  2.0.3  Bug fixes:
+                    * Added include statement for <cmath> to cosmic.cc
+                      to allow compiling under gcc 4 on OS X.
+                    * Changed Makefile to fix dependencies on libcosmo.a
+                      so that it wouldn't force a re-compile even when
+                      everything was up to date.
+02 Aug 2006  2.0.4  Added "quick mode" option for providing a redshift
+                    on the command line.  Further improved handling of
+                    invalid user input.
+04 Aug 2006  2.0.5  Multiple changes:
+                    * Moved validation of numeric user input into libcosmo
+                      since it was also useful within the class's member
+                      functions.
+                    * Eliminated command line option for curvature since
+                      libcosmo no longer supports it as a user-definable
+                      parameter.
+01 Jul 2007  2.0.6  Cleaned up header includes.
+27 Nov 2007  2.0.7  Improved handling of user-input redshifts, including
+                    allowing for a redshift of 0.
+22 Nov 2011  2.0.8  Updated header includes for compatibility with newer
+                    versions of gcc.
+12 Jul 2021  2.1.0  Added HTML output option.
+
+libcosmo:
+05 Feb 2003  1.0    Initial version
+11 Feb 2003  1.01   Added inspection function for redshift, changed
+                    default parameters to those from the initial WMAP
+                    results.
+25 Feb 2003  1.02   Fixed bug in initialization of z_
+25 Feb 2003  1.03   Added functions for more compact output and for output
+                    to files.
+06 Mar 2003  1.04   Added function to get cosmological parameters from the
+                    user interactively.
+05 Jun 2003  1.05   Internal clean-up of output functions to reduce
+                    code duplication and improve versatility
+18 Jun 2003  1.06   Initialization bug in getCosmologyFromUser() fixed
+15 Jul 2003  2.0    Numerous changes including:
+                    * All distance measures now based on line-of-sight
+                      comoving distance
+                    * Universe with non-zero Lambda now uses Romberg
+                      integration to calculate distances
+                    * Added option for non-zero contribution to Omega from
+                      curvature.
+                    * Added calculation of transverse co-moving distance
+                    * Added calculation of comoving volume out to redshift z
+                    * Added calculation of lookback time and age of the
+                      Universe
+                    * Rationalized public interface to output functions
+16 Jul 2003  2.0.1  Improved handling of non-numeric values input by user
+                    in getCosmologyFromUser()
+15 Apr 2004  2.0.2  Minor fix to allow compilation with certain strict
+                    compilers
+15 Mar 2005  2.0.3  Cleaned up to compile under g++ with fewer warnings;
+                    added calculation of critical density at z
+05 Jan 2006  2.0.4  Simplified code in output functions and fixed
+                    formatting of printParams output if called multiple
+                    times.
+04 Aug 2006  2.1    Multiple changes:
+                    * Added non-member function for validation of numeric
+                      user input. The function is adapted from the one that
+                      was included in cosmic v2.0.4.
+                    * Fixed minor bug in calculation of comoving volume in
+                      universes with curved geometry.
+                    * Eliminated Omega curvature as a user-definable
+                      parameter in order to ensure that the Friedmann
+                      Equation is always satisfied.
+                    * Changed output to print q_0 regardless of the value
+                      of Omega Lambda.
+01 Jul 2007  2.1.1  Fixed possible segfault in Cosmo::romberg and cleaned
+                    up header includes. Thanks to Patrick Hudelot for finding
+                    the bug in the Romberg integration code.
+27 Nov 2007  2.1.2  Multiple changes:
+                    * Fixed bug that was causing comoving volume to be
+                      calculated incorrectly for universes with flat
+                      geometry. Thanks to Steven Bamford of the University
+                      of Portsmouth for finding this bug.
+                    * Improved the intialization function and the printLong()
+                      functions to better handle z=0.
+22 Nov 2011  2.1.3  Multiple changes:
+                    * Fixed a bug in calculating the comoving volume for Omega-
+                      kappa != 0. Thanks to Dimitrios Emmanoulopoulos for
+                      finding this bug.
+                    * Fixed a bug in the constructor that prevented Omega-kappa
+                      from being set to a value < 0.
+                    * Updated header includes for compatibility with newer
+                      versions of gcc.
+23 Nov 2013  2.1.4  Multiple changes:
+                    * Redefined the integrand for computing the age of the
+                      Universe using variable substitution so it successfully
+                      integrates from z=0 to z=infinity.
+                    * Changed the default values of the cosmological parameters
+                      to those from Planck + WMAP polarization at low
+                      multipoles, Table 2 of Planck Collaboration, "Planck 2013
+                      results. XVI. Cosmological parameters," Astronomy &
+                      Astrophyics submitted, 2013.
+                    * Added the lookback time to z to the output in batch mode.
+12 Jul 2021  2.1.5  Added HTML output option.
+
+Copyright
+=========
+
+Copyright (C) 2003-2021  Joshua Kempner <josh@kempner.net>
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation; either version 2 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc., 59
+Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+Please send any bug fixes, enhancements, or useful comments by email to
+josh@kempner.net.
